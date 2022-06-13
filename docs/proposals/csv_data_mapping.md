@@ -63,7 +63,7 @@ Testing
 
 Testing of data mapping with suitable tests as following is required. 
 ```
-type foo Employee4{
+type Employee4 record{
     string id;
     int age;
 }

@@ -98,7 +98,8 @@ isolated function testTableContent5() returns error? {
 
 ```
 
-Assumptions made:
+Risks and Assumptions
+--------
 
 1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type.
 2. Number of fields in defined record and the number of headers in the CSV file are equal.

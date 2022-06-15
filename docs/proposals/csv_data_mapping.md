@@ -4,7 +4,7 @@ _Owners_: @sahanhe, @daneshk
 _Reviewers_:  @daneshk    
 _Created_: 
 _Updated_: 
-_Issue_: 
+_Issue_: [#3004](https://github.com/ballerina-platform/ballerina-standard-library/issues/3004)
 
 
 Summary
@@ -101,5 +101,5 @@ isolated function testTableContent5() returns error? {
 Risks and Assumptions
 --------
 
-1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type.
+1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type otherwise data gets mapped in the order of fields in the record.
 2. Number of fields in defined record and the number of headers in the CSV file are equal.

@@ -58,27 +58,47 @@ check fileWriteCsv(filePath, result_2);
 ```
 
 
-Testing
+Example
 -------
 
-Testing of data mapping with suitable tests as following is required. 
+Example of a data mapping in to array of records.
+
+CSV file
 ```
-type Employee4 record{
+id, name, salary
+User1, WSO2, 10000.50
+User2, WSO2, 20000.50
+User3, WSO2, 30000.00
+```
+
+Code
+
+```
+type Employee record {
     string id;
-    int age;
-}
+    string name;
+    float salary;
+};
+
+
 @test:Config {}
 isolated function testTableContent5() returns error? {
-    string filePath = RESOURCES_BASE_PATH + "datafiles/io/records/sample11.csv";
-    int expectedValue = 10;
-    int total = 0;
+    float expectedValue = 60001.00;
+    float total = 0;
 
-    Employee4[] Result = check fileReadCSV(filePath);
-    foreach Employee4 x in Result {
+    Employee[] Result = check fileReadCSV(filePath);
+    foreach Employee x in Result {
         total = total + x.age;
     }
     test:assertEquals(total, expectedValue);
+    check csvChannel
     check csvChannel.close();
+    fileWriteCsv(filePath, Result);
 }
 
 ```
+
+Assumptions made:
+
+1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type.
+2. Number of fields in defined record and the number of headers in the CSV file are equal.

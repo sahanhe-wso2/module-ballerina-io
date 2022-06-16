@@ -1,65 +1,63 @@
-# Proposal: Support Data Mapping in CSV read/write operations
+## Summary
 
-_Owners_: @sahanhe, @daneshk
-_Reviewers_:  @daneshk    
-_Created_: 
-_Updated_: 
-_Issue_: [#3004](https://github.com/ballerina-platform/ballerina-standard-library/issues/3004)
-
-
-Summary
-------
 Current CSV read/write APIs supports reading and writing as string[][] values. In this proposal we propose to add data mapping to return an array of particular record defined by the user.
 
-Goals
------
-
-Provide an option to map the data to array of particular records defined by the user. 
+## Goals
 
 > Adding data mapping feature to CSV READ/Write operations to return an array of particular record defined by the user.
 
-> Change ```fileReadCsv, fileWriteCsv``` to support data mapping.
+> Change ```fileReadCsv, fileWriteCsv, fileReadCsvAsStream, fileWriteCsvFromStream``` to support data mapping.
 
 > Carry out the data mapping by infering the Return type automatically without passing a function parameter
 
-Motivation
-----------
+## Motivation
 
-Until now, user doesn't have a direct data mapping method to get an array of user defined records from CSVs.  
-
-Description
------------
-```
-//user defined record
-type foo record{
-    string foo_1;
-    int foo_2;
-}
-```
-
-```
-//Return String[][]
-string[][] result_1 = check fileReadCsv(filePath);
-```
-
-```
-//Return array of records after data mapping
-foo[] result_2 = check fileReadCsv(filePath);
-```
-
-```
-//Takes String[][] as input
-check fileWriteCsv(filePath, result_1);
-```
-
-```
-//Takes array of records as input
-check fileWriteCsv(filePath, result_2);
-```
+Until now, user doesn't have a direct data mapping method to get an array of user defined records from CSVs.
 
 
-Example
--------
+
+## Description
+
+```fileReadCsv(), fileWriteCsv(), fileReadCsvAsStream(), fileWriteCsvFromStream()```  APIs are modified to support data mapping in CSV read/write operations. Existing Currently ```fileReadCsv()``` API returns String[][] and modified API can return either String[][] or record[] depending on the return type. Similarly ```fileWriteCsv()``` currently accepts String[][] inputs and modified API can accept both String[][] and record[].
+
+For stream type APIs, ```fileReadCsvAsStream()``` currently returns ```stream<string[], Error?>|Error``` and modified API will return ```stream<string[]|record{}, Error?>|Error```.  Similarly, ```fileWriteCsvFromStream()``` accepts ```stream<string[], Error?>```  as the input and it will be modified to ```stream<string[]|record{}, Error?>```.
+
+modified APIs
+```ballerina
+# Read file content as a CSV.
+# + path - The CSV file path
+# + skipHeaders - Number of headers, which should be skipped prior to reading records
+# + return - The entire CSV content in the channel as an array of string arrays, an array of records or an `io:Error`
+
+public isolated function fileReadCsv(string path, int skipHeaders = 0, typedesc<record{}|string[]> returnType = <>) returns returnType[]|Error = @java:Method ;
+```
+
+``` ballerina
+# Write CSV content to a file.
+# + path - The CSV file path
+# + content - CSV content as an array of string arrays or an array of records
+# + option - To indicate whether to overwrite or append the given content
+# + return - `()` when the writing was successful or an `io:Error`
+
+public isolated function fileWriteCsv(string path, string[][]|map<anydata>[] content, FileWriteOption option = OVERWRITE) returns Error? ;
+```
+
+```ballerina
+# Read file content as a CSV.
+# + path - The CSV file path
+# + return - The entire CSV content in the channel a stream of string arrays, an stream of records or an `io:Error`
+
+public isolated function fileReadCsvAsStream(string path, typedesc<string[]|record{}>  returnType = <>) returns  stream<returnType, Error?>|Error ;
+```
+
+```ballerina
+# Write CSV record stream to a file.
+# + path - The CSV file path
+# + content - A CSV record stream to be written
+# + option - To indicate whether to overwrite or append the given content
+# + return - `()` when the writing was successful or an `io:Error`
+public isolated function fileWriteCsvFromStream(string path, stream<string[]|map<anydata>, Error?> content, FileWriteOption option = OVERWRITE) returns Error? ;
+```
 
 Example of a data mapping in to array of records.
 
@@ -73,7 +71,7 @@ User3, WSO2, 30000.00
 
 Code
 
-```
+```ballerina
 type Employee record {
     string id;
     string name;
@@ -82,24 +80,22 @@ type Employee record {
 
 
 @test:Config {}
-isolated function testTableContent5() returns error? {
+isolated function testTableContent() returns error? {
     float expectedValue = 60001.00;
     float total = 0;
 
-    Employee[] Result = check fileReadCSV(filePath);
-    foreach Employee x in Result {
+    Employee[] result = check fileReadCSV(filePath);
+    foreach Employee x in result {
         total = total + x.age;
     }
     test:assertEquals(total, expectedValue);
-    check csvChannel
-    check csvChannel.close();
-    fileWriteCsv(filePath, Result);
+    check fileWriteCsv(filePath, result);
 }
 
 ```
 
-Risks and Assumptions
---------
 
-1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type otherwise data gets mapped in the order of fields in the record.
+## Risks and Assumptions
+
+1. Headers of the record is provided in the first row of CSV, and they are equal to the headers in record type, otherwise data gets mapped in the order of fields in the record..
 2. Number of fields in defined record and the number of headers in the CSV file are equal.
